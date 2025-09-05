@@ -1,0 +1,11 @@
+URL Shortener
+
+Une application simple de raccourcisseur d’URL avec :
+• Backend : Node.js + Fastify + TypeScript + Prisma
+• Frontend : React + TypeScript (Vite)
+• Database : PostgreSQL (via Docker Compose) + Adminer
+
+Prérequis
+• Node.js (>=18)
+• pnpm (ou npm)
+• Docker + Docker Compose
