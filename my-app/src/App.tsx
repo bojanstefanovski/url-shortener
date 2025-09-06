@@ -4,6 +4,19 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { errorMessages, type ErrorCode } from "./error/messages";
 import {z} from 'zod';
 
+import { Button } from "@/components/ui/button"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { ThemeProvider } from "@/components/theme-provider"
+ 
+
+
 const formSchema = z.object({
   longUrl: z.url(),
 })
@@ -23,7 +36,7 @@ type ApiResponse = ApiSuccess | ApiError;
 
 export const App =() => {
 
-  const {register, handleSubmit, formState: { errors } } = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema)
   })
 
@@ -57,27 +70,32 @@ export const App =() => {
   };
 
   return (
-    <div style={{ padding: "2rem" }}>
-      <h1>URL Shortener</h1>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
 
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <input
-          placeholder="https://example.com"
-          {...register("longUrl", {
-            required: "URL obligatoire",
-            pattern: {
-              value: /^https?:\/\/.+$/i,
-              message: "Doit être une URL http(s) valide",
-            },
-          })}
-          style={{ width: "20rem", marginRight: "1rem", height: "2rem" }}
-        />
-        <button type="submit">Raccourcir</button>
-      </form>
+      <div className="container mx-auto max-w-xl gap-20 flex flex-col mt-20">
 
-      {errors.longUrl && (
-        <p style={{ color: "red" }}>{errors.longUrl.message}</p>
-      )}
-    </div>
+        <h1 className="scroll-m-20 text-center text-4xl font-extrabold tracking-tight text-balance">URL Shortener</h1>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <FormField
+              control={form.control}
+              name="longUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input placeholder="https://example.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit">Shorten</Button>
+          </form>
+        </Form>
+      </div>
+      
+    </ThemeProvider>
+
   );
 }
