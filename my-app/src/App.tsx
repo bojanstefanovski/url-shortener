@@ -22,7 +22,7 @@ import { CopyButton } from "@/components/ui/copy-button"
 
 
 const formSchema = z.object({
-  longUrl: z.url("Please enter a valid URL")
+  longUrl: z.string().min(1, "Please enter an URL").url()
 })
 
 type ApiSuccess = {
