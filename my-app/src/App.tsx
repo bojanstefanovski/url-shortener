@@ -22,7 +22,7 @@ import { CopyButton } from "@/components/ui/copy-button"
 
 
 const formSchema = z.object({
-  longUrl: z.url(),
+  longUrl: z.url("Please enter a valid URL")
 })
 
 type ApiSuccess = {
@@ -107,7 +107,7 @@ export const App =() => {
   };
 
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+    <ThemeProvider defaultTheme="dark">
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl gap-4 sm:gap-6 flex flex-col mt-8 sm:mt-12 md:mt-16 lg:mt-20">
 
@@ -159,7 +159,7 @@ export const App =() => {
                 </FormItem>
               )}
             />
-            <Button type="submit">Shorten</Button>
+            <Button type="submit" className="hover:cursor-pointer">Shorten</Button>
           </form>
         </Form>
       </div>
