@@ -109,7 +109,7 @@ export const App =() => {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
 
-      <div className="container mx-auto max-w-xl gap-6 flex flex-col mt-20">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl gap-4 sm:gap-6 flex flex-col mt-8 sm:mt-12 md:mt-16 lg:mt-20">
 
         <h1 className="scroll-m-20 text-center text-4xl font-extrabold tracking-tight text-balance">URL Shortener</h1>
 
@@ -134,8 +134,8 @@ export const App =() => {
             <AlertDescription className="space-y-2">
               <p>{alert.message}</p>
               {alert.url && (
-                <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
-                  <code className="flex-1 text-sm">{alert.url}</code>
+                <div className="flex items-center justify-center gap-2 p-2 bg-muted rounded-md">
+                  <code className="flex-1 text-sm break-all overflow-hidden">{alert.url}</code>
                   <CopyButton
                     text={alert.url}
                   />
