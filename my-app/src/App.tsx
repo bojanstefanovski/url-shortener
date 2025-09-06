@@ -1,5 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useState } from "react";
+import { CheckCircle, AlertCircle, X, Copy } from "lucide-react";
 
 import { errorMessages, type ErrorCode } from "./error/messages";
 import {z} from 'zod';
@@ -14,6 +16,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { ThemeProvider } from "@/components/theme-provider"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
  
 
 
@@ -21,24 +24,55 @@ const formSchema = z.object({
   longUrl: z.url(),
 })
 
-type ApiSuccess = { 
-  ok: true; 
-  message?: string; 
-  data: { slug: string; longUrl: string } 
+type ApiSuccess = {
+  ok: true;
+  message?: string;
+  data: { slug: string; longUrl: string }
 };
 
-type ApiError = { 
-  ok: false; 
-  error: ErrorCode 
+type ApiError = {
+  ok: false;
+  error: ErrorCode
 };
 
 type ApiResponse = ApiSuccess | ApiError;
 
+type AlertState = {
+  show: boolean;
+  type: 'success' | 'error';
+  title: string;
+  message: string;
+  url?: string;
+};
+
 export const App =() => {
+  const [alert, setAlert] = useState<AlertState>({
+    show: false,
+    type: 'success',
+    title: '',
+    message: '',
+  });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema)
   })
+
+  const dismissAlert = () => {
+    setAlert(prev => ({ ...prev, show: false }));
+  };
+
+  const copyToClipboard = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setAlert(prev => ({
+        ...prev,
+        title: 'Copied!',
+        message: 'URL copied to clipboard'
+      }));
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+    }
+  };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
@@ -55,26 +89,79 @@ export const App =() => {
         const code = (jsonResponse && 'error' in jsonResponse && typeof jsonResponse.error === "string")
           ? jsonResponse.error
           : "internal_error";
-        alert(errorMessages[code] ?? "Erreur serveur");
+        setAlert({
+          show: true,
+          type: 'error',
+          title: 'Error',
+          message: errorMessages[code] ?? "Server error"
+        });
         return;
       }
 
-      if (res.status === 201 && jsonResponse && 'data' in jsonResponse) {
-        alert(`Nouvelle URL courte créée : http://localhost:3000/${jsonResponse.data.slug}`);
-      } else if (res.status === 200 && jsonResponse && 'data' in jsonResponse) {
-        alert(`Cette URL existait déjà : http://localhost:3000/${jsonResponse.data.slug}`);
+      if ((res.status === 201 || res.status === 200) && jsonResponse && 'data' in jsonResponse) {
+        const shortUrl = `http://localhost:3000/${jsonResponse.data.slug}`;
+        setAlert({
+          show: true,
+          type: 'success',
+          title: 'Short URL Created!',
+          message: 'Your new short URL is ready.',
+          url: shortUrl
+        });
       }
     } catch {
-      alert(`Erreur : ${errorMessages.err ?? "Erreur inconnue"}`);
+      setAlert({
+        show: true,
+        type: 'error',
+        title: 'Error',
+        message: errorMessages.err ?? "Unknown error"
+      });
     }
   };
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
 
-      <div className="container mx-auto max-w-xl gap-20 flex flex-col mt-20">
+      <div className="container mx-auto max-w-xl gap-6 flex flex-col mt-20">
 
         <h1 className="scroll-m-20 text-center text-4xl font-extrabold tracking-tight text-balance">URL Shortener</h1>
+
+        {alert.show && (
+          <Alert variant={alert.type === 'error' ? 'destructive' : 'default'} className="relative">
+            {alert.type === 'success' ? (
+              <CheckCircle className="h-4 w-4" />
+            ) : (
+              <AlertCircle className="h-4 w-4" />
+            )}
+            <AlertTitle className="flex items-center justify-between">
+              {alert.title}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-auto p-1 hover:bg-transparent"
+                onClick={dismissAlert}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </AlertTitle>
+            <AlertDescription className="space-y-2">
+              <p>{alert.message}</p>
+              {alert.url && (
+                <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                  <code className="flex-1 text-sm">{alert.url}</code>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => copyToClipboard(alert.url!)}
+                    className="h-8"
+                  >
+                    <Copy className="h-3 w-3 mr-1" />
+                    Copy
+                  </Button>
+                </div>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
