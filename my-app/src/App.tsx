@@ -1,9 +1,12 @@
 import { useForm } from "react-hook-form";
-import { errorMessages, type ErrorCode } from "./error/messages";
+import { zodResolver } from "@hookform/resolvers/zod"
 
-type FormValues = {
-  longUrl: string;
-};
+import { errorMessages, type ErrorCode } from "./error/messages";
+import {z} from 'zod';
+
+const formSchema = z.object({
+  longUrl: z.url(),
+})
 
 type ApiSuccess = { 
   ok: true; 
@@ -19,14 +22,17 @@ type ApiError = {
 type ApiResponse = ApiSuccess | ApiError;
 
 export const App =() => {
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>();
 
-  const onSubmit = async (data: FormValues) => {
+  const {register, handleSubmit, formState: { errors } } = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema)
+  })
+
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       const res = await fetch("http://localhost:3000/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(values),
       });
 
       const jsonResponse: ApiResponse = await res.json().catch(() => null);
@@ -56,7 +62,6 @@ export const App =() => {
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <input
-          type="url"
           placeholder="https://example.com"
           {...register("longUrl", {
             required: "URL obligatoire",
