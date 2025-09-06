@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useState } from "react";
-import { CheckCircle, AlertCircle, X, Copy } from "lucide-react";
+import { CheckCircle, AlertCircle, X } from "lucide-react";
 
 import { errorMessages, type ErrorCode } from "./error/messages";
 import {z} from 'zod';
@@ -17,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { CopyButton } from "@/components/ui/copy-button"
  
 
 
@@ -59,19 +60,6 @@ export const App =() => {
 
   const dismissAlert = () => {
     setAlert(prev => ({ ...prev, show: false }));
-  };
-
-  const copyToClipboard = async (url: string) => {
-    try {
-      await navigator.clipboard.writeText(url);
-      setAlert(prev => ({
-        ...prev,
-        title: 'Copied!',
-        message: 'URL copied to clipboard'
-      }));
-    } catch (err) {
-      console.error('Failed to copy: ', err);
-    }
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -148,15 +136,9 @@ export const App =() => {
               {alert.url && (
                 <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
                   <code className="flex-1 text-sm">{alert.url}</code>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => copyToClipboard(alert.url!)}
-                    className="h-8"
-                  >
-                    <Copy className="h-3 w-3 mr-1" />
-                    Copy
-                  </Button>
+                  <CopyButton
+                    text={alert.url}
+                  />
                 </div>
               )}
             </AlertDescription>
