@@ -2,19 +2,29 @@ const allowedProtocol = ["https:", "http:"];
 const allowedPorts = [443, 80];
 const blockedLocalHostname = ["127.0.0.1", "localhost", "[::1]"];
 
-export const isPrivateIpHost = (host: string) => {
-  const privateIp = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
-  if (!privateIp) return false;
+export const isPrivateIpHost = (host: string): boolean => {
+  // IPv4
+  const ipv4 = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (ipv4) {
+    const [a, b] = ipv4.slice(1).map(Number);
+    return (
+      a === 10 ||
+      (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168) ||
+      a === 127 ||
+      (a === 169 && b === 254)
+    );
+  }
 
-  const [firstNumber, secondNumber] = privateIp.slice(1).map(Number);
+  let v6 = host.replace(/^\[|\]$/g, "").toLowerCase();
+  const pct = v6.indexOf("%");
+  if (pct !== -1) v6 = v6.slice(0, pct);
 
-  return (
-    firstNumber === 10 ||
-    (firstNumber === 172 && secondNumber >= 16 && secondNumber <= 31) ||
-    (firstNumber === 192 && secondNumber === 168) ||
-    firstNumber === 127 ||
-    (firstNumber === 169 && secondNumber === 254)
-  );
+  if (v6 === "::1") return true;
+  if (/^(fc|fd)/i.test(v6)) return true;
+  if (/^fe8/i.test(v6)) return true;
+
+  return false;
 };
 
 export const isSafeUrl = (

@@ -29,6 +29,18 @@ describe("isPrivateIpHost", () => {
   it("returns false for hostname", () => {
     expect(isPrivateIpHost("example.com")).toBe(false);
   });
+
+  it("detects IPv6 loopback ::1 as private", () => {
+    expect(isPrivateIpHost("::1")).toBe(true);
+  });
+
+  it("returns false for public IPv6", () => {
+    expect(isPrivateIpHost("2001:4860:4860::8888")).toBe(false); // Google DNS v6
+  });
+
+  it("ignores trailing dot in hostname", () => {
+    expect(isPrivateIpHost("example.com.")).toBe(false);
+  });
 });
 
 describe("isSafeUrl", () => {
@@ -76,4 +88,47 @@ describe("isSafeUrl", () => {
   it("allows https with explicit port 443", () => {
     expect(isSafeUrl("https://example.com:443").safe).toBe(true);
   });
+
+  it("blocks javascript: scheme", () => {
+    const r = isSafeUrl("javascript:alert('xss')");
+    expect(r.safe).toBe(false);
+    expect(r.reason).toMatch(/protocol|scheme/i);
+  });
+
+  it("blocks data: scheme", () => {
+    const r = isSafeUrl("data:text/html,<script>alert(1)</script>");
+    expect(r.safe).toBe(false);
+    expect(r.reason).toMatch(/protocol|scheme/i);
+  });
+
+  it("blocks file: scheme", () => {
+    const r = isSafeUrl("file:///etc/passwd");
+    expect(r.safe).toBe(false);
+    expect(r.reason).toMatch(/protocol|scheme/i);
+  });
+
+  // Localhost / private (more)
+  it("blocks localhost variants", () => {
+    expect(isSafeUrl("http://localhost:8080").safe).toBe(false);
+    expect(isSafeUrl("http://127.0.0.1").safe).toBe(false);
+    expect(isSafeUrl("http://[::1]").safe).toBe(false);
+  });
+
+  it("blocks private IPv6 (fc00::/7, fe80::/10)", () => {
+    expect(isSafeUrl("http://[fc00::1]").safe).toBe(false);
+    expect(isSafeUrl("http://[fe80::1234]").safe).toBe(false);
+  });
+
+  // Ports
+  it("allows http explicit port 80", () => {
+    expect(isSafeUrl("http://example.com:80").safe).toBe(true);
+  });
+
+  it("blocks random high port if disallowed", () => {
+    const r = isSafeUrl("https://example.com:4444");
+    // expect true/false based on your policy; here we assume disallowed:
+    expect(r.safe).toBe(false);
+    expect(r.reason).toMatch(/port/i);
+  });
+
 });
