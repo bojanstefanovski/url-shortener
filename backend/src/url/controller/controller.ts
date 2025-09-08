@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { CreateUrlSchema, RedirectUrlSchema } from "../validator/validator.js";
 import { GetSlugRouteParams, RegisterUrlPostRouteBody, UrlService } from "../interfaces.js";
 import { toUrlDto } from "../utils/mapper.dto.js";
+import { buildRedirectUrl } from "../utils/build-redirect-url.js";
 
 
 export const createUrlController = (urlService: UrlService) => ({
@@ -26,27 +27,21 @@ export const createUrlController = (urlService: UrlService) => ({
         }
     },
    redirectUrl: async (
-  req: FastifyRequest<{ Params: GetSlugRouteParams }>,
-  reply: FastifyReply
-) => {
-        try {
-            const { slug } = RedirectUrlSchema.parse(req.params)
-            const url = await urlService.getUrlBySlug(slug)
-            if (!url) return reply.status(404).send({ error: "Not found" })
+            req: FastifyRequest<{ Params: GetSlugRouteParams }>,
+            reply: FastifyReply
+    ) => {
+         try {
+            const { slug } = RedirectUrlSchema.parse(req.params);
+            const url = await urlService.getUrlBySlug(slug);
+            if (!url) return reply.code(404).send({ error: "not_found" });
 
-            const targetUrl = new URL(url.longUrl)
+            const incoming = (req.query ?? {}) as Record<string, string | undefined>;
+            const finalUrl = buildRedirectUrl(url.longUrl, incoming);
 
-            const incomingParams = req.query as Record<string, string | undefined>
-            for (const [key, value] of Object.entries(incomingParams)) {
-            if (value) {
-                targetUrl.searchParams.set(key, value)
-            }
-            }
-
-            return reply.redirect(targetUrl.toString(), 302)
+            return reply.redirect(finalUrl, 302);
         } catch (err) {
-            req.log.error(err)
-            return reply.code(500).send({ error: "Internal error" })
+            req.log.error(err);
+            return reply.code(500).send({ error: "internal_error" });
         }
         }
 })
