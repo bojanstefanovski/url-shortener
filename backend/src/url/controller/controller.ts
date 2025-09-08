@@ -25,15 +25,28 @@ export const createUrlController = (urlService: UrlService) => ({
                 return reply.code(500).send({ ok: false, error: "internal_error" });
         }
     },
-    redirectUrl: async (req: FastifyRequest<{ Params: GetSlugRouteParams}>, reply: FastifyReply)=> {
+   redirectUrl: async (
+  req: FastifyRequest<{ Params: GetSlugRouteParams }>,
+  reply: FastifyReply
+) => {
         try {
             const { slug } = RedirectUrlSchema.parse(req.params)
             const url = await urlService.getUrlBySlug(slug)
-            if(!url)  return reply.status(404).send({ error: "Not found" });
-             return reply.redirect(url.longUrl, 302);
-        } catch(err) {
-            req.log.error(err);
-            return reply.code(500).send({ error: "Internal error" });   
+            if (!url) return reply.status(404).send({ error: "Not found" })
+
+            const targetUrl = new URL(url.longUrl)
+
+            const incomingParams = req.query as Record<string, string | undefined>
+            for (const [key, value] of Object.entries(incomingParams)) {
+            if (value) {
+                targetUrl.searchParams.set(key, value)
+            }
+            }
+
+            return reply.redirect(targetUrl.toString(), 302)
+        } catch (err) {
+            req.log.error(err)
+            return reply.code(500).send({ error: "Internal error" })
         }
-    }
+        }
 })
