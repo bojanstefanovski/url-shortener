@@ -1,6 +1,7 @@
 import * as React from "react"
-import { X, CheckCircle2, AlertTriangle, Copy, Check } from "lucide-react"
+import { X, CheckCircle2, AlertTriangle } from "lucide-react"
 import styles from "./alert.module.css"
+import { CopyButton } from "./copy-to-clipboard"
 
 type AlertVariant = "success" | "error"
 
@@ -19,18 +20,6 @@ export const Alert: React.FC<AlertProps> = ({
   url,
   onClose,
 }) => {
-  const [copied, setCopied] = React.useState(false)
-
-  const copyToClipboard = async () => {
-    if (!url) return
-    try {
-      await navigator.clipboard.writeText(url)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1800)
-    } catch (e) {
-      console.error("Failed to copy", e)
-    }
-  }
 
   const variantClass =
     variant === "success" ? styles.success : styles.error
@@ -53,13 +42,7 @@ export const Alert: React.FC<AlertProps> = ({
             <a href={url} target="_blank" rel="noreferrer" className={styles.url}>
               {url}
             </a>
-            <button onClick={copyToClipboard} className={styles.copyButton}>
-              {copied ? (
-                <Check className={styles.iconSmall} />
-              ) : (
-                <Copy className={styles.iconSmall} />
-              )}
-            </button>
+            <CopyButton text={url} />
           </div>
         )}
       </div>

@@ -22,7 +22,7 @@ export const CopyButton = ({ text }: { text: string }) => {
       ) : (
         <Copy className={styles.icon} />
       )}
-      {copied ? "Copié" : "Copier"}
+      {copied}
     </button>
   )
 }

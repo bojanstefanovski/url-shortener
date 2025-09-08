@@ -8,7 +8,7 @@
   height: 2rem;       
   font-size: 0.875rem;    
   cursor: pointer;
-  background: black;
+  background: #d1d5db;
   transition: background-color 0.15s ease;
 }
 
