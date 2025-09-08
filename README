@@ -9,3 +9,23 @@ Prérequis
 • Node.js (>=18)
 • pnpm (ou npm)
 • Docker + Docker Compose
+
+Lancer la base de données (PostgreSQL + Adminer)
+docker compose up -d
+
+Installer et lancer le backend
+cd backend
+pnpm install        # ou: npm install
+cp .env.example .env
+
+Mets à jour DATABASE_URL dans .env (voir ci-dessous)
+pnpm prisma migrate dev   # ou: npx prisma migrate dev
+pnpm dev                  # ou: npm run dev
+- Backend dispo sur http://localhost:3000
+- Adminer dispo sur http://localhost:8080
+
+Installer et lancer le frontend
+cd ../my-app
+pnpm install        # ou: npm install
+pnpm dev            # ou: npm run dev
+-Frontend dispo sur http://localhost:5173
