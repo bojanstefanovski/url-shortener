@@ -10,11 +10,18 @@ Prérequis
 - pnpm (ou npm)
 - Docker + Docker Compose
 
-Lancer la base de données (PostgreSQL + Adminer)
+# Lancer la base de données (PostgreSQL + Adminer)
+A la racine du projet
 docker compose up -d
 
 PostgreSQL : localhost:5432
 Adminer : http://localhost:8080
+
+
+# Mets à jour DATABASE_URL dans .env si nécessaire
+cd backend
+cp .env.example .env
+pnpm prisma migrate dev   # ou: npx prisma migrate dev
 
 # Lancer le projet en entier
 A la racine du projet :
@@ -30,12 +37,6 @@ Frontend disponible sur http://localhost:5173
 Installer et lancer le backend :
 cd backend
 pnpm install        # ou: npm install
-cp .env.example .env
-# Mets à jour DATABASE_URL dans .env si nécessaire
-pnpm prisma migrate dev   # ou: npx prisma migrate dev
-pnpm dev                  # ou: npm run dev
-Backend disponible sur http://localhost:3000
-Adminer disponible sur http://localhost:8080
 
 Installer et lancer le frontend :
 cd ../my-app
