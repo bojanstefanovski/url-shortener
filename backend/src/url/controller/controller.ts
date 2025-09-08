@@ -1,7 +1,8 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { CreateUrlSchema, RedirectUrlSchema } from "../validator/validator.js";
 import { GetSlugRouteParams, RegisterUrlPostRouteBody, UrlService } from "../interfaces.js";
-import { toUrlDto } from "../mapper.dto.js";
+import { toUrlDto } from "../utils/mapper.dto.js";
+
 
 export const createUrlController = (urlService: UrlService) => ({
     createSlug: async (req: FastifyRequest<{ Body: RegisterUrlPostRouteBody }>, reply: FastifyReply) => {
@@ -9,18 +10,19 @@ export const createUrlController = (urlService: UrlService) => ({
             const dto = CreateUrlSchema.parse(req.body);
             const resp = await urlService.register(dto.longUrl);
             if (resp.existing) {
-            return reply.code(200).send({ ok: true, message: "slug_exists", data: toUrlDto(resp.url) });
-            }
-            return reply.code(201).send({ ok: true, message: "slug_created", data: toUrlDto(resp.url) });
+                return reply.code(200).send({ ok: true, message: "slug_exists", data: toUrlDto(resp.url) });
+             }
+                return reply.code(201).send({ ok: true, message: "slug_created", data: toUrlDto(resp.url) });
         } catch (err: any) {
+            console.log(err);
             if (err?.name === "ZodError") {
-            return reply.code(400).send({ ok: false, error: "invalid_input" });
+                return reply.code(400).send({ ok: false, error: "invalid_input" });
             }
             if (err?.code) {
             const status = typeof err.statusCode === "number" ? err.statusCode : 400;
-            return reply.code(status).send({ ok: false, error: err.code });
+                return reply.code(status).send({ ok: false, error: err.code });
             }
-            return reply.code(500).send({ ok: false, error: "internal_error" });
+                return reply.code(500).send({ ok: false, error: "internal_error" });
         }
     },
     redirectUrl: async (req: FastifyRequest<{ Params: GetSlugRouteParams}>, reply: FastifyReply)=> {

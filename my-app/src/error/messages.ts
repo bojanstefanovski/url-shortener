@@ -1,7 +1,6 @@
-
 export type ErrorCode = 
   | "invalid_url"
-  | "protocol_not_allowed" 
+  | "protocol_forbidden" 
   | "localhost_forbidden"
   | "private_ip_forbidden"
   | "port_not_allowed"
@@ -12,15 +11,14 @@ export type ErrorCode =
   | "bad_percent_encoding"
 
 export const errorMessages: Record<ErrorCode, string> = {
-  invalid_url: "L'URL n'est pas valide",
-  protocol_not_allowed: "Seules les URLs http(s) sont autorisées",
-  localhost_forbidden: "Les adresses localhost ne sont pas autorisées",
-  private_ip_forbidden: "Les adresses IP privées ne sont pas autorisées",
-  port_not_allowed: "Ce port n'est pas autorisé",
-  internal_error: "",
-  invalid_special_chars: "Les caracteres speciaux sont pas autorise",
-  err: "",
-  spaces_not_allowed: "Les espaces non encode ne sont pas autorise",
-  bad_percent_encoding: "Encodage pas correcte"
-
+  invalid_url: "The URL is not valid",
+  protocol_forbidden: "Only http(s) URLs are allowed",
+  localhost_forbidden: "Localhost addresses are not allowed",
+  private_ip_forbidden: "Private IP addresses are not allowed",
+  port_not_allowed: "This port is not allowed",
+  internal_error: "Internal server error",
+  invalid_special_chars: "Special characters are not allowed",
+  err: "Unexpected error",
+  spaces_not_allowed: "Unencoded spaces are not allowed",
+  bad_percent_encoding: "Incorrect percent encoding",
 };

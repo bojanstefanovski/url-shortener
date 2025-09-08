@@ -1,9 +1,7 @@
 import { z } from "zod";
 
 export const CreateUrlSchema = z.object({
-  longUrl: z.string().trim().url().refine((u) => {
-    try { const p = new URL(u); return ["http:", "https:"].includes(p.protocol); } catch { return false; }
-  }, { message: "Only HTTP/HTTPS URLs allowed" }),
+  longUrl: z.string().trim().url()
 });
 
 export const RedirectUrlSchema = z.object({

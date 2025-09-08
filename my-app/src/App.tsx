@@ -1,170 +1,157 @@
-import { useForm } from "react-hook-form";
+import * as React from "react"
+import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useState } from "react";
-import { CheckCircle, AlertCircle, X } from "lucide-react";
+import { z } from "zod"
 
-import { errorMessages, type ErrorCode } from "./error/messages";
-import {z} from 'zod';
-
-import { Button } from "@/components/ui/button"
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { ThemeProvider } from "@/components/theme-provider"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { CopyButton } from "@/components/ui/copy-button"
- 
+import { errorMessages, type ErrorCode } from "./error/messages"
+import { Alert } from "./components/alert"
+import styles from "./app.module.css"
 
 
 const formSchema = z.object({
-  longUrl: z.string().min(1, "Please enter an URL").url()
+  longUrl: z
+    .string()
+    .optional()
+    .refine(
+      (val) => !val || /^https?:\/\/\S+$/i.test(val),
+      { message: "Must be a valid URL" }
+    ),
 })
 
 type ApiSuccess = {
-  ok: true;
-  message?: string;
+  ok: true
+  message?: string
   data: { slug: string; longUrl: string }
-};
+}
+type ApiError = { ok: false; error: ErrorCode }
+type ApiResponse = ApiSuccess | ApiError
 
-type ApiError = {
-  ok: false;
-  error: ErrorCode
-};
-
-type ApiResponse = ApiSuccess | ApiError;
-
-type AlertState = {
-  show: boolean;
-  type: 'success' | 'error';
-  title: string;
-  message: string;
-  url?: string;
-};
-
-export const App =() => {
-  const [alert, setAlert] = useState<AlertState>({
-    show: false,
-    type: 'success',
-    title: '',
-    message: '',
-  });
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema)
+export const App = () => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
   })
 
-  const dismissAlert = () => {
-    setAlert(prev => ({ ...prev, show: false }));
-  };
+  const [alert, setAlert] = React.useState<{
+    variant: "success" | "error"
+    title: string
+    description?: string
+    url?: string
+  } | null>(null)
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    setAlert(null)
     try {
       const res = await fetch("http://localhost:3000/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
-      });
+      })
+      const json: ApiResponse | null = await res.json().catch(() => null)
 
-      const jsonResponse: ApiResponse = await res.json().catch(() => null);
-      console.log(jsonResponse)
-      if (!res.ok || jsonResponse?.ok === false) {
-        console.log(jsonResponse)
-        const code = (jsonResponse && 'error' in jsonResponse && typeof jsonResponse.error === "string")
-          ? jsonResponse.error
-          : "internal_error";
+      if (!res.ok || !json || (json as ApiError).ok === false) {
+        const code: ErrorCode =
+          (json && "error" in json && typeof json.error === "string"
+            ? json.error
+            : "internal_error") as ErrorCode
+
         setAlert({
-          show: true,
-          type: 'error',
-          title: 'Error',
-          message: errorMessages[code] ?? "Server error"
-        });
-        return;
+          variant: "error",
+          title: "Error",
+          description: errorMessages[code] ?? "Server error",
+        })
+        return
       }
 
-      if ((res.status === 201 || res.status === 200) && jsonResponse && 'data' in jsonResponse) {
-        const shortUrl = `http://localhost:3000/${jsonResponse.data.slug}`;
+      const success = json as ApiSuccess
+      const shortUrl = `http://localhost:3000/${success.data.slug}`
+
+      if (res.status === 201 || success.message === "slug_created") {
         setAlert({
-          show: true,
-          type: 'success',
-          title: 'Short URL Created!',
-          message: 'Your new short URL is ready.',
-          url: shortUrl
-        });
+          variant: "success",
+          title: "New URL created",
+          description: "Your URL has been shortened successfully.",
+          url: shortUrl,
+        })
+      } else {
+        setAlert({
+          variant: "success",
+          title: "URL already exists",
+          description: "This short URL already existed.",
+          url: shortUrl,
+        })
       }
+
+      reset()
     } catch {
       setAlert({
-        show: true,
-        type: 'error',
-        title: 'Error',
-        message: errorMessages.err ?? "Unknown error"
-      });
+        variant: "error",
+        title: "Error",
+        description: errorMessages.internal_error ?? "Unknown error",
+      })
     }
-  };
+  }
 
   return (
-    <ThemeProvider defaultTheme="dark">
+    <div className={styles.wrapper}>
+      <h1 style={{ fontSize: "1.5rem", fontWeight: 600, marginBottom: "1rem" }}>
+        URL Shortener
+      </h1>
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl gap-4 sm:gap-6 flex flex-col mt-8 sm:mt-12 md:mt-16 lg:mt-20">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        style={{ display: "flex", gap: 8, alignItems: "flex-start" }}
+      >
+        <div>
+          <input
+            placeholder="https://example.com"
+            {...register("longUrl")}
+            style={{
+              width: "25rem",
+              height: 36,
+              padding: "0 12px",
+              border: "1px solid #ddd",
+              borderRadius: 6,
+            }}
+          />
+          <p className={styles.fieldError}>
+            {errors.longUrl?.message ?? "\u00A0"}
+          </p>
+        </div>
 
-        <h1 className="scroll-m-20 text-center text-4xl font-extrabold tracking-tight text-balance">URL Shortener</h1>
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          style={{
+            height: 36,
+            padding: "0 16px",
+            borderRadius: 6,
+            background: "#000",
+            color: "#fff",
+            opacity: isSubmitting ? 0.6 : 1,
+          }}
+        >
+          {isSubmitting ? "…" : "Shorten"}
+        </button>
+      </form>
 
-        {alert.show && (
-          <Alert variant={alert.type === 'error' ? 'destructive' : 'default'} className="relative">
-            {alert.type === 'success' ? (
-              <CheckCircle className="h-4 w-4" />
-            ) : (
-              <AlertCircle className="h-4 w-4" />
-            )}
-            <AlertTitle className="flex items-center justify-between">
-              {alert.title}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-auto p-1 hover:bg-transparent"
-                onClick={dismissAlert}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </AlertTitle>
-            <AlertDescription className="space-y-2">
-              <p>{alert.message}</p>
-              {alert.url && (
-                <div className="flex items-center justify-center gap-2 p-2 bg-muted rounded-md">
-                  <code className="flex-1 text-sm break-all overflow-hidden">{alert.url}</code>
-                  <CopyButton
-                    text={alert.url}
-                  />
-                </div>
-              )}
-            </AlertDescription>
-          </Alert>
-        )}
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <FormField
-              control={form.control}
-              name="longUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Input placeholder="https://example.com" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+      <div className={styles.alertSlot}>
+        {alert && (
+          <div className={`${styles.alertEnter} ${styles.alertShow}`}>
+            <Alert
+              variant={alert.variant}
+              title={alert.title}
+              description={alert.description}
+              url={alert.url}
+              onClose={() => setAlert(null)}
             />
-            <Button type="submit" className="hover:cursor-pointer">Shorten</Button>
-          </form>
-        </Form>
+          </div>
+        )}
       </div>
-      
-    </ThemeProvider>
-
-  );
+    </div>
+  )
 }
