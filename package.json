@@ -1,0 +1,13 @@
+{
+  "name": "url-shortener",
+  "private": true,
+  "scripts": {
+    "install:all": "pnpm --filter ./backend install && pnpm --filter ./my-app install",
+    "dev:backend": "pnpm --filter ./backend dev",
+    "dev:frontend": "pnpm --filter ./my-app dev",
+    "start": "concurrently \"pnpm dev:backend\" \"pnpm dev:frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.0.0"
+  }
+}

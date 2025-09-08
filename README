@@ -1,31 +1,44 @@
 URL Shortener
 
 Une application simple de raccourcisseur d’URL avec :
-• Backend : Node.js + Fastify + TypeScript + Prisma
-• Frontend : React + TypeScript (Vite)
-• Database : PostgreSQL (via Docker Compose) + Adminer
+- Backend : Node.js + Fastify + TypeScript + Prisma
+- Frontend : React + TypeScript (Vite)
+- Database : PostgreSQL (via Docker Compose) + Adminer
 
 Prérequis
-• Node.js (>=18)
-• pnpm (ou npm)
-• Docker + Docker Compose
+- Node.js (>=18)
+- pnpm (ou npm)
+- Docker + Docker Compose
 
 Lancer la base de données (PostgreSQL + Adminer)
 docker compose up -d
 
-Installer et lancer le backend
+PostgreSQL : localhost:5432
+Adminer : http://localhost:8080
+
+# Lancer le projet en entier
+A la racine du projet :
+pnpm install
+pnpm install:all
+pnpm start
+
+Backend disponible sur http://localhost:3000
+Frontend disponible sur http://localhost:5173
+
+# Lancer séparément
+
+Installer et lancer le backend :
 cd backend
 pnpm install        # ou: npm install
 cp .env.example .env
-
-Mets à jour DATABASE_URL dans .env (voir ci-dessous)
+# Mets à jour DATABASE_URL dans .env si nécessaire
 pnpm prisma migrate dev   # ou: npx prisma migrate dev
 pnpm dev                  # ou: npm run dev
-- Backend dispo sur http://localhost:3000
-- Adminer dispo sur http://localhost:8080
+Backend disponible sur http://localhost:3000
+Adminer disponible sur http://localhost:8080
 
-Installer et lancer le frontend
+Installer et lancer le frontend :
 cd ../my-app
 pnpm install        # ou: npm install
 pnpm dev            # ou: npm run dev
--Frontend dispo sur http://localhost:5173
+Frontend disponible sur http://localhost:5173
